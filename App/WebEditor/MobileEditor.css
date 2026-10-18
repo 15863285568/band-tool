@@ -193,6 +193,33 @@ body.miface-mobile .mf-workbench-wrap[data-device-shape="run"] {
     border-radius: 34% / 17% !important;
 }
 
+body.miface-mobile #workbench-outer {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+body.miface-mobile .mf-layer-jump {
+    position: absolute;
+    right: 18px;
+    top: 82px;
+    z-index: 40;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(20, 20, 28, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+body.miface-mobile .mf-layer-jump:active {
+    transform: scale(0.96);
+}
+
 body.miface-mobile .mf-workbench {
     width: 100% !important;
     height: 100% !important;
@@ -423,5 +450,66 @@ body.miface-mobile .mf-home-page > .mf-left > div:last-child > * {
 
     body.miface-mobile .mf-toolbar-nav .border-l-\[1px\] {
         margin-left: 2px !important;
+    }
+}
+
+/* Landscape: a 50/50 workspace — canvas on the left, layers and inspector
+   stacked on the right. */
+@media (orientation: landscape) and (max-height: 560px) {
+    body.miface-mobile .mf-main {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 8px !important;
+        height: calc(100vh - 76px) !important;
+        padding: 8px !important;
+        overflow: hidden !important;
+    }
+
+    body.miface-mobile .mf-center {
+        grid-column: 1 !important;
+        grid-row: 1 / span 2 !important;
+        order: 0 !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.miface-mobile .mf-left {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        order: 0 !important;
+        height: 100% !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+    }
+
+    body.miface-mobile .mf-right {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        order: 0 !important;
+        height: 100% !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+    }
+
+    body.miface-mobile .mf-workbench-wrap,
+    body.miface-mobile .mf-workbench-outer-wrap {
+        height: 100% !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        aspect-ratio: auto !important;
+    }
+
+    body.miface-mobile .mf-workbench {
+        min-height: 0 !important;
+        height: 100% !important;
+    }
+
+    body.miface-mobile .mf-layer-jump {
+        top: 74px;
+        right: 12px;
     }
 }

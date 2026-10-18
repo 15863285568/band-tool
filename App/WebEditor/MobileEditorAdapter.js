@@ -97,6 +97,8 @@
       }
 
       applyDeviceFrame();
+      installLayerJump();
+      installLongPress();
     } else {
       var left = root.querySelector('[class~="flex-[15]"]');
       var right = root.querySelector('[class~="flex-[85]"]');
@@ -128,6 +130,67 @@
     wrap.style.setProperty('--device-ratio', dimensions[0] + ' / ' + dimensions[1]);
     wrap.setAttribute('data-device-label', dimensions[0] + ' × ' + dimensions[1] + ' · ' + shape);
     wrap.setAttribute('data-device-shape', shape);
+  }
+
+  function installLayerJump() {
+    var center = document.querySelector('.mf-center');
+    if (!center || center.querySelector('.mf-layer-jump')) return;
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'mf-layer-jump';
+    button.textContent = '图层 / 操作';
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+      var left = document.querySelector('.mf-left');
+      if (left) left.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    center.appendChild(button);
+  }
+
+  function installLongPress() {
+    if (window.__mifaceLongPressInstalled) return;
+    window.__mifaceLongPressInstalled = true;
+    var timer = null;
+    var startX = 0;
+    var startY = 0;
+
+    function cancel() {
+      if (timer) { clearTimeout(timer); timer = null; }
+    }
+
+    document.addEventListener('touchstart', function (event) {
+      var target = event.target;
+      if (!target || !target.closest || !target.closest('#workbench-outer')) return;
+      var touch = event.touches && event.touches[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      cancel();
+      timer = setTimeout(function () {
+        timer = null;
+        var el = document.elementFromPoint(startX, startY) || target;
+        var menu = new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          button: 2,
+          buttons: 2,
+          clientX: startX,
+          clientY: startY
+        });
+        el.dispatchEvent(menu);
+        if (navigator.vibrate) navigator.vibrate(20);
+      }, 560);
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function (event) {
+      var touch = event.touches && event.touches[0];
+      if (!touch) return;
+      if (Math.abs(touch.clientX - startX) > 12 || Math.abs(touch.clientY - startY) > 12) cancel();
+    }, { passive: true });
+
+    document.addEventListener('touchend', cancel, { passive: true });
+    document.addEventListener('touchcancel', cancel, { passive: true });
   }
 
   function schedule() {
