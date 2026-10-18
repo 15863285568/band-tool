@@ -63,7 +63,7 @@ struct EditorScreen: View {
                 EditorWebView(baseURL: url, route: $model.route) { event in
                     model.handleEditorEvent(event)
                 }
-                .ignoresSafeArea(.container, edges: .bottom)
+                .background(Color.black)
             } else {
                 VStack(spacing: 16) {
                     ProgressView()
