@@ -99,6 +99,7 @@
       applyDeviceFrame();
       installLayerJump();
       installLongPress();
+      window.setTimeout(recenterStage, 350);
     } else {
       var left = root.querySelector('[class~="flex-[15]"]');
       var right = root.querySelector('[class~="flex-[85]"]');
@@ -107,6 +108,39 @@
       var page = (left && left.parentElement) || root.firstElementChild;
       add(page, 'mf-home-page');
     }
+  }
+
+  // The editor keeps a large Konva stage inside a small scroll container and
+  // only re-centres it on window resize / wheel events.  On phones the stage
+  // is laid out before our column change settles, leaving every shape far
+  // outside the visible area â€?taps then land on empty stage space instead of
+  // the shape.  Scroll the container so the watch-face frame sits in view.
+  function recenterStage() {
+    // Renderer keeps a watchface frame (~336x480 fixed) inside a large stage.
+    var workbench = document.querySelector('#workbench-outer');
+    if (!workbench) return;
+    var frame = workbench.querySelector('._center');
+    var target = frame || workbench.firstElementChild;
+    if (!target) return;
+
+    var box = workbench.getBoundingClientRect();
+    if (box.width < 40 || box.height < 40) return;
+
+    var rect = target.getBoundingClientRect();
+    if (rect.width < 4 || rect.height < 4) return;
+
+    if (frame) {
+      // Frame is already fully visible with margin â€?nothing to do.
+      if (rect.top >= box.top - 4 && rect.bottom <= box.bottom + 4 &&
+          rect.left >= box.left - 4 && rect.right <= box.right + 4) {
+        return;
+      }
+    }
+
+    var deltaX = (rect.left + rect.width / 2) - (box.left + box.width / 2);
+    var deltaY = (rect.top + rect.height / 2) - (box.top + box.height / 2);
+    workbench.scrollLeft += deltaX;
+    workbench.scrollTop += deltaY;
   }
 
   function applyDeviceFrame() {
@@ -222,4 +256,7 @@
   window.setTimeout(tag, 100);
   window.setTimeout(tag, 700);
   window.setTimeout(tag, 1800);
+  window.setTimeout(recenterStage, 1200);
+  window.setTimeout(recenterStage, 2200);
+  window.setTimeout(recenterStage, 3600);
 })();

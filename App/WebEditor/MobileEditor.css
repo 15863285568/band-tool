@@ -197,6 +197,15 @@ body.miface-mobile #workbench-outer {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
+    touch-action: pan-x pan-y;
+}
+
+body.miface-mobile #workbench-outer::-webkit-scrollbar {
+    display: none;
+}
+
+body.miface-mobile #workbench-outer * {
+    touch-action: pan-x pan-y;
 }
 
 body.miface-mobile .mf-layer-jump {

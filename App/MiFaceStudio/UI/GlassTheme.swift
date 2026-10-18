@@ -135,6 +135,7 @@ extension View {
 
 struct StudioTabBar: View {
     @Binding var selection: Int
+    @Binding var collapsed: Bool
     @EnvironmentObject private var settings: AppSettings
 
     private let items: [(title: String, icon: String)] = [
@@ -145,6 +146,41 @@ struct StudioTabBar: View {
     ]
 
     var body: some View {
+        Group {
+            if collapsed {
+                collapsedBar
+            } else {
+                expandedBar
+            }
+        }
+        .shadow(color: .black.opacity(0.35), radius: collapsed ? 12 : 24, y: collapsed ? 4 : 12)
+        .padding(.horizontal, collapsed ? 0 : 16)
+        .padding(.top, collapsed ? 0 : 6)
+        .padding(.bottom, collapsed ? 0 : 4)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+
+    private var collapsedBar: some View {
+        Button {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.84)) {
+                collapsed = false
+            }
+        } label: {
+            Label("菜单", systemImage: "chevron.up")
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.92))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(.ultraThinMaterial, in: Capsule(style: .continuous))
+                .overlay(Capsule(style: .continuous).stroke(Color.white.opacity(0.22), lineWidth: 0.7))
+                .shadow(color: .black.opacity(0.3), radius: 10, y: 4)
+        }
+        .buttonStyle(.plain)
+        .padding(.trailing, 12)
+        .padding(.bottom, 2)
+    }
+
+    private var expandedBar: some View {
         HStack(spacing: 4) {
             ForEach(items.indices, id: \.self) { index in
                 Button {
@@ -187,6 +223,25 @@ struct StudioTabBar: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(items[index].title)
             }
+
+            Button {
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.84)) {
+                    collapsed = true
+                }
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                VStack(spacing: 4) {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("收起")
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                }
+                .foregroundStyle(.white.opacity(0.52))
+                .frame(width: 52)
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("隐藏底部栏")
         }
         .padding(6)
         .background {
@@ -216,10 +271,6 @@ struct StudioTabBar: View {
                 }
             }
         }
-        .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
-        .padding(.horizontal, 16)
-        .padding(.top, 6)
-        .padding(.bottom, 4)
     }
 }
 

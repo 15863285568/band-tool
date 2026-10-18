@@ -26,6 +26,7 @@ struct RootView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var settings: AppSettings
     @State private var selection = 0
+    @State private var tabBarCollapsed = false
 
     var body: some View {
         ZStack {
@@ -47,7 +48,7 @@ struct RootView: View {
             .background(Color.clear)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            StudioTabBar(selection: $selection)
+            StudioTabBar(selection: $selection, collapsed: $tabBarCollapsed)
         }
         .overlay(alignment: .top) {
             if let toast = model.toast {
