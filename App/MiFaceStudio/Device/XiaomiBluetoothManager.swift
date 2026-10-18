@@ -21,6 +21,7 @@ final class XiaomiBluetoothManager: NSObject, ObservableObject {
     @Published private(set) var authReady = false
     @Published var phase: InstallPhase = .idle
     @Published var lastError: String?
+    @Published var needsPairingReset = false
     @Published var bluetoothState: CBManagerState = .unknown
 
     private var central: CBCentralManager!
@@ -69,6 +70,7 @@ final class XiaomiBluetoothManager: NSObject, ObservableObject {
         connectedName = device.name
         phase = .connecting
         lastError = nil
+        needsPairingReset = false
         central.connect(peripheral, options: nil)
     }
 
@@ -178,6 +180,7 @@ extension XiaomiBluetoothManager: CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         isConnected = true
+        needsPairingReset = false
         phase = .handshake
         peripheral.delegate = self
         peripheral.discoverServices([Self.serviceUUID])
@@ -188,9 +191,11 @@ extension XiaomiBluetoothManager: CBCentralManagerDelegate {
         didFailToConnect peripheral: CBPeripheral,
         error: Error?
     ) {
-        phase = .failed(error?.localizedDescription ?? "连接失败")
-        lastError = error?.localizedDescription ?? "连接失败"
+        let message = error?.localizedDescription ?? "连接失败"
+        phase = .failed(message)
+        lastError = message
         isConnected = false
+        detectPairingFailure(message)
     }
 
     func centralManager(
@@ -200,9 +205,25 @@ extension XiaomiBluetoothManager: CBCentralManagerDelegate {
     ) {
         isConnected = false
         authReady = false
-        phase = error == nil ? .idle : .failed(error?.localizedDescription ?? "连接已断开")
+        let message = error?.localizedDescription
+        phase = error == nil ? .idle : .failed(message ?? "连接已断开")
+        if let message {
+            detectPairingFailure(message)
+        }
         session?.stop()
         session = nil
+    }
+
+    private func detectPairingFailure(_ message: String) {
+        let lower = message.lowercased()
+        if lower.contains("peer removed pairing information") ||
+            lower.contains("pairing information") ||
+            lower.contains("encryption is insufficient") ||
+            lower.contains("authentication is insufficient") {
+            needsPairingReset = true
+            lastError = "iPhone 与设备的蓝牙配对信息已经失效。请到系统设置里「忽略此设备」，重启手表/手环后再连接。"
+            phase = .failed(lastError ?? "蓝牙配对信息失效")
+        }
     }
 }
 

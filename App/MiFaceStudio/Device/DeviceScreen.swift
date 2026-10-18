@@ -24,6 +24,9 @@ private struct DeviceContent: View {
             ScrollView {
                 VStack(spacing: 16) {
                     connectionCard
+                    if bluetooth.needsPairingReset {
+                        pairingResetCard
+                    }
                     authCard
                     installCard
                     helpCard
@@ -153,6 +156,63 @@ private struct DeviceContent: View {
                     .buttonStyle(.bordered)
                 }
             }
+        }
+    }
+
+    private var pairingResetCard: some View {
+        SectionCard("连接修复") {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text("iPhone 里还保留着旧的配对信息")
+                        .font(.subheadline.weight(.semibold))
+                }
+                Text("刷机、恢复出厂、换手机，或在旧手机上解绑过设备后，iOS 会继续使用旧密钥，于是报“peer removed pairing information”。必须让系统忘掉旧配对。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    repairStep("1", "打开 iPhone「设置 → 蓝牙」，找到手表/手环，点「忽略此设备」。")
+                    repairStep("2", "重启手表/手环；如果之前连过别的手机，先在旧手机上取消配对。")
+                    repairStep("3", "回到本 App，点下面的「重新搜索」再连接。")
+                }
+
+                HStack(spacing: 10) {
+                    Button {
+                        UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+                    } label: {
+                        Label("打开系统设置", systemImage: "gear")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
+                        bluetooth.needsPairingReset = false
+                        bluetooth.disconnect()
+                        bluetooth.startScan()
+                    } label: {
+                        Label("重新搜索", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(StudioTheme.accent)
+                }
+                .font(.footnote)
+            }
+        }
+    }
+
+    private func repairStep(_ number: String, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text(number)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 18, height: 18)
+                .background(StudioTheme.accent, in: Circle())
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

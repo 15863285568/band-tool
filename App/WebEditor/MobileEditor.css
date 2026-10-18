@@ -1,0 +1,353 @@
+/* Mobile layout for the bundled Xiaomi watch-face editor.
+   The upstream editor is a fixed three-column desktop UI; on phones the
+   canvas and the right-hand inspector are pushed off-screen.  This sheet
+   turns the columns into a single scrollable stack, keeps the toolbar
+   horizontally scrollable, and applies the app's soft-glass language. */
+
+body.miface-mobile {
+    background:
+        radial-gradient(70% 55% at 12% 4%, rgba(255, 120, 40, 0.28), transparent 70%),
+        radial-gradient(60% 60% at 95% 20%, rgba(235, 45, 120, 0.18), transparent 70%),
+        radial-gradient(80% 70% at 60% 100%, rgba(40, 80, 255, 0.14), transparent 70%),
+        #08080c !important;
+    color: #f7f7fb;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+}
+
+body.miface-mobile #app,
+body.miface-mobile #app > div,
+body.miface-mobile .mf-shell,
+body.miface-mobile .mf-content,
+body.miface-mobile .mf-root {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+    background: transparent !important;
+}
+
+body.miface-mobile .mf-topbar {
+    display: none !important;
+}
+
+/* Top route/edit toolbar: horizontal strip, every control reachable by swipe. */
+body.miface-mobile .mf-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 60px;
+    padding: 8px 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    background: rgba(14, 14, 20, 0.82) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(22px) saturate(1.35);
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+}
+
+body.miface-mobile .mf-toolbar > * {
+    flex-shrink: 0 !important;
+}
+
+body.miface-mobile .mf-toolbar-nav {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    display: flex !important;
+    align-items: center;
+    gap: 2px !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+body.miface-mobile .mf-toolbar-nav > * {
+    flex-shrink: 0 !important;
+}
+
+body.miface-mobile .mf-toolbar .w-20,
+body.miface-mobile .mf-toolbar .w-\[80px\] {
+    width: 64px !important;
+    min-width: 64px !important;
+}
+
+/* Stack the desktop columns. */
+body.miface-mobile .mf-main {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+    gap: 12px;
+    overflow: visible !important;
+}
+
+body.miface-mobile .mf-left,
+body.miface-mobile .mf-center,
+body.miface-mobile .mf-right {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    overflow: visible !important;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.065) !important;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(20px) saturate(1.25);
+    -webkit-backdrop-filter: blur(20px) saturate(1.25);
+}
+
+/* Editor: canvas first, then layers, then inspector. */
+body.miface-mobile.mf-page-editor .mf-center { order: 1 !important; }
+body.miface-mobile.mf-page-editor .mf-left { order: 2 !important; }
+body.miface-mobile.mf-page-editor .mf-right { order: 3 !important; }
+
+/* Home: navigation first, content second. */
+body.miface-mobile.mf-page-home .mf-left { order: 1 !important; }
+body.miface-mobile.mf-page-home .mf-right { order: 2 !important; }
+body.miface-mobile.mf-page-home .mf-center { display: none !important; }
+
+body.miface-mobile .mf-left > div,
+body.miface-mobile .mf-right > div,
+body.miface-mobile .mf-center > div {
+    height: auto !important;
+    max-height: none !important;
+}
+
+body.miface-mobile .mf-left [class*="h-[calc"],
+body.miface-mobile .mf-center [class*="h-[calc"],
+body.miface-mobile .mf-right [class*="h-[calc"] {
+    height: auto !important;
+}
+
+body.miface-mobile .mf-left [class*="overflow-y-scroll"],
+body.miface-mobile .mf-left [class*="overflow-overlay"],
+body.miface-mobile .mf-left [class*="overflow-auto"] {
+    max-height: 42vh;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.miface-mobile .mf-right {
+    display: block !important;
+    overflow: visible !important;
+}
+
+body.miface-mobile .mf-right [class*="overflow-auto"],
+body.miface-mobile .mf-right [class*="overflow-y-auto"] {
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Workbench/canvas. */
+body.miface-mobile .mf-workbench-wrap,
+body.miface-mobile .mf-workbench-outer-wrap {
+    height: 48vh !important;
+    min-height: 330px;
+    max-height: 520px;
+    width: 100% !important;
+    flex: none !important;
+    overflow: hidden !important;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.16);
+}
+
+body.miface-mobile .mf-workbench {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 320px;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.miface-mobile .mf-resize,
+body.miface-mobile .mf-preview-tab {
+    display: none !important;
+}
+
+body.miface-mobile .mf-footer {
+    display: none !important;
+}
+
+/* Glass treatment for the editor's own cards/panels. */
+body.miface-mobile .bg-black-card,
+body.miface-mobile [class*="bg-black-card"] {
+    background: rgba(255, 255, 255, 0.075) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-radius: 16px !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+body.miface-mobile .bg-black-active,
+body.miface-mobile [class*="bg-black-active"] {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-radius: 14px !important;
+}
+
+body.miface-mobile .bg-\[\#202020\],
+body.miface-mobile .bg-\[\#313131\],
+body.miface-mobile [class*="bg-[#202020]"],
+body.miface-mobile [class*="bg-[#313131]"] {
+    background: transparent !important;
+}
+
+body.miface-mobile .bg-\[\#515151\],
+body.miface-mobile [class*="bg-[#515151]"] {
+    background: rgba(255, 255, 255, 0.14) !important;
+}
+
+body.miface-mobile .ant-select-selector,
+body.miface-mobile .ant-input,
+body.miface-mobile .ant-input-affix-wrapper,
+body.miface-mobile textarea {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    color: #fff !important;
+    border-radius: 12px !important;
+}
+
+body.miface-mobile .ant-btn {
+    min-height: 40px;
+    border-radius: 12px !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+body.miface-mobile .ant-btn-primary {
+    background: linear-gradient(135deg, #ff7a2f, #e42b72) !important;
+    border-color: transparent !important;
+    box-shadow: 0 8px 20px rgba(255, 90, 60, 0.28);
+}
+
+body.miface-mobile .ant-btn-sm {
+    min-height: 34px;
+}
+
+body.miface-mobile .ant-modal {
+    max-width: calc(100vw - 20px) !important;
+    margin: 10px auto !important;
+    padding-bottom: 0 !important;
+}
+
+body.miface-mobile .ant-modal-content {
+    max-height: 86vh;
+    overflow-y: auto;
+    border-radius: 20px !important;
+    background: rgba(26, 26, 34, 0.94) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(24px);
+}
+
+body.miface-mobile .ant-modal-body {
+    max-height: 64vh !important;
+    overflow-y: auto !important;
+}
+
+body.miface-mobile .ant-drawer-content {
+    background: rgba(20, 20, 28, 0.96) !important;
+}
+
+body.miface-mobile .ant-dropdown,
+body.miface-mobile .ant-select-dropdown {
+    max-width: calc(100vw - 24px) !important;
+}
+
+body.miface-mobile *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+body.miface-mobile *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
+}
+
+/* Home page: sidebar + library become a vertical stack. */
+body.miface-mobile .mf-home-page {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    gap: 12px;
+    padding: 10px !important;
+    background: transparent !important;
+}
+
+body.miface-mobile .mf-home-page > .mf-left,
+body.miface-mobile .mf-home-page > .mf-right {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    flex: 0 0 auto !important;
+}
+
+body.miface-mobile .mf-home-page > .mf-left {
+    order: 1 !important;
+}
+
+body.miface-mobile .mf-home-page > .mf-right {
+    order: 2 !important;
+    border-radius: 20px !important;
+}
+
+body.miface-mobile .mf-home-page [class*="h-[calc(100vh-106px)]"] {
+    height: auto !important;
+    overflow: visible !important;
+}
+
+body.miface-mobile .mf-home-page [class*="flex-[15]"] {
+    width: 100% !important;
+    flex: none !important;
+}
+
+body.miface-mobile .mf-home-page [class*="flex-[85]"] {
+    width: 100% !important;
+    flex: none !important;
+    height: auto !important;
+}
+
+body.miface-mobile .mf-home-page > .mf-left > div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+}
+
+body.miface-mobile .mf-home-page > .mf-left > div:last-child {
+    flex-direction: row !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 8px 0 0 !important;
+    gap: 8px;
+}
+
+body.miface-mobile .mf-home-page > .mf-left > div:last-child > * {
+    flex: 1 1 0 !important;
+    width: auto !important;
+}
+
+@media (max-width: 900px) {
+    body.miface-mobile .mf-page-editor .mf-left {
+        padding-bottom: 16px !important;
+    }
+
+    body.miface-mobile .mf-toolbar-nav .border-l-\[1px\] {
+        margin-left: 2px !important;
+    }
+}
