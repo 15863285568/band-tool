@@ -1,0 +1,2 @@
+(function(){"use strict";onmessage=async l=>{const{width:t,height:a,imageBlob:g}=l.data??{};try{const e=new OffscreenCanvas(t,a).getContext("2d",{willReadFrequently:!0});if(!e)throw"ctx is null";createImageBitmap(g).then(n=>{e.drawImage(n,0,0);const o=e.getImageData(0,0,t,a).data;let c=0,r=0;for(let s=0;s<o.length;s+=4)if(c++,o[s+3]===0){r++;continue}const i=1-r/c;n.close(),postMessage({area:Math.round(t*a*i),ratio:i})}).catch(()=>{postMessage({ratio:1})})}catch{postMessage({ratio:1})}}})();
+//# sourceMappingURL=image-not-transparent-worker-a514aa2a.js.map

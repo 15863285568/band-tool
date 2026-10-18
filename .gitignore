@@ -1,0 +1,14 @@
+App/MiFaceStudio.xcodeproj/
+App/build/
+App/DerivedData/
+App/*.xcworkspace/xcuserdata/
+*.xcuserstate
+.DS_Store
+Research/webproto/userData/
+Research/webproto/workspace/
+Research/webproto/temp/
+Research/webproto/*.log
+Research/webproto/*.png
+Research/samples/_tmp_lvgl/
+Research/samples/_lvgl*/
+Research/samples/_rle__*/

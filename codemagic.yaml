@@ -1,0 +1,71 @@
+workflows:
+  ios-testflight:
+    name: iOS TestFlight / Ad Hoc
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.miface.studio
+      vars:
+        XCODE_PROJECT: MiFaceStudio.xcodeproj
+        XCODE_SCHEME: MiFaceStudio
+        BUNDLE_ID: com.miface.studio
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Install XcodeGen
+        script: |
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+          xcodegen --version
+      - name: Generate Xcode project
+        script: |
+          cd App
+          xcodegen generate --spec project.yml
+          ls -la
+      - name: Set build number
+        script: |
+          cd App
+          BUILD_NUMBER=$(date +%Y%m%d%H%M)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" MiFaceStudio/Info.plist || true
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $CM_ENV
+      - name: Resolve Swift packages
+        script: |
+          cd App
+          xcodebuild -resolvePackageDependencies \
+            -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME"
+      - name: Build and archive
+        script: |
+          cd App
+          xcodebuild \
+            -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$CM_BUILD_DIR/MiFaceStudio.xcarchive" \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            archive
+      - name: Export IPA
+        script: |
+          cd App
+          xcodebuild -exportArchive \
+            -archivePath "$CM_BUILD_DIR/MiFaceStudio.xcarchive" \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath "$CM_BUILD_DIR/ipa" \
+            -allowProvisioningUpdates
+    artifacts:
+      - $CM_BUILD_DIR/ipa/*.ipa
+      - $CM_BUILD_DIR/MiFaceStudio.xcarchive
+      - /tmp/xcodebuild_logs/*.log
