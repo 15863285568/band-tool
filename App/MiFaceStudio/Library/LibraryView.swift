@@ -37,8 +37,9 @@ struct LibraryView: View {
                 }
                 .padding(.vertical, 12)
             }
-            .background(Color.studioBackground.ignoresSafeArea())
+            .background { StudioBackground() }
             .navigationTitle("表盘库")
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
@@ -156,7 +157,11 @@ private struct ProjectCard: View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(white: 0.14))
+                    .fill(Color.white.opacity(0.055))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(Color.white.opacity(0.06), lineWidth: 0.7)
+                    )
                 if let preview = project.preview, let image = UIImage(contentsOfFile: preview.path) {
                     Image(uiImage: image)
                         .resizable()
@@ -181,7 +186,7 @@ private struct ProjectCard: View {
             .padding(.horizontal, 2)
         }
         .padding(10)
-        .background(Color.studioCard, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .glassSurface(cornerRadius: 22)
     }
 }
 
@@ -192,7 +197,11 @@ private struct ArtifactCard: View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(white: 0.14))
+                    .fill(Color.white.opacity(0.055))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(Color.white.opacity(0.06), lineWidth: 0.7)
+                    )
                 VStack(spacing: 6) {
                     Image(systemName: "checkerboard.rectangle")
                         .font(.system(size: 30, weight: .light))
@@ -224,6 +233,6 @@ private struct ArtifactCard: View {
             .background(.orange.opacity(0.12), in: Capsule())
         }
         .padding(10)
-        .background(Color.studioCard, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .glassSurface(cornerRadius: 22)
     }
 }

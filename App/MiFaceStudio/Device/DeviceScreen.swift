@@ -32,8 +32,9 @@ private struct DeviceContent: View {
                 }
                 .padding(16)
             }
-            .background(Color.studioBackground.ignoresSafeArea())
+            .background { StudioBackground() }
             .navigationTitle("设备")
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {

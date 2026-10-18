@@ -20,11 +20,7 @@ struct SectionCard<Content: View>: View {
             }
             content
                 .padding(16)
-                .background(Color(white: 0.10), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(.white.opacity(0.06))
-                )
+                .glassSurface(cornerRadius: 20, emphasized: true)
         }
     }
 }
@@ -36,9 +32,25 @@ struct PrimaryButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
             .background(
-                LinearGradient(colors: [.orange, .pink.opacity(0.85)], startPoint: .leading, endPoint: .trailing),
-                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                LinearGradient(
+                    colors: [StudioTheme.accent, StudioTheme.magenta.opacity(0.88)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ),
+                in: RoundedRectangle(cornerRadius: 15, style: .continuous)
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.42), .white.opacity(0.06)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 0.8
+                    )
+            )
+            .shadow(color: StudioTheme.accent.opacity(0.32), radius: 14, y: 7)
             .opacity(configuration.isPressed ? 0.75 : 1)
             .scaleEffect(configuration.isPressed ? 0.99 : 1)
     }

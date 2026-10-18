@@ -90,7 +90,9 @@ struct InstallSheet: View {
                 }
                 .padding(16)
             }
-            .background(Color.studioBackground.ignoresSafeArea())
+            .background {
+                StudioBackground()
+            }
             .navigationTitle("安装表盘")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

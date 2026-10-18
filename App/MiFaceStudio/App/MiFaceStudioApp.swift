@@ -1,13 +1,21 @@
 import SwiftUI
+import UIKit
 
 @main
 struct MiFaceStudioApp: App {
     @StateObject private var model = AppModel()
+    @StateObject private var settings = AppSettings()
+
+    init() {
+        // The app uses its own floating glass tab bar.
+        UITabBar.appearance().isHidden = true
+    }
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(model)
+                .environmentObject(settings)
                 .preferredColorScheme(.dark)
                 .onAppear { model.start() }
         }
@@ -16,40 +24,56 @@ struct MiFaceStudioApp: App {
 
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var settings: AppSettings
     @State private var selection = 0
 
     var body: some View {
-        TabView(selection: $selection) {
-            EditorScreen()
-                .tabItem { Label("制作", systemImage: "paintbrush.pointed") }
-                .tag(0)
+        ZStack {
+            StudioBackground()
 
-            LibraryView(selection: $selection, library: model.library)
-                .tabItem { Label("表盘库", systemImage: "square.grid.2x2") }
-                .tag(1)
+            TabView(selection: $selection) {
+                EditorScreen()
+                    .tag(0)
 
-            DeviceScreen()
-                .tabItem { Label("设备", systemImage: "applewatch") }
-                .tag(2)
+                LibraryView(selection: $selection, library: model.library)
+                    .tag(1)
 
-            SettingsScreen()
-                .tabItem { Label("设置", systemImage: "gearshape") }
-                .tag(3)
+                DeviceScreen()
+                    .tag(2)
+
+                SettingsScreen()
+                    .tag(3)
+            }
+            .background(Color.clear)
         }
-        .tint(.orange)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            StudioTabBar(selection: $selection)
+        }
         .overlay(alignment: .top) {
             if let toast = model.toast {
                 Text(toast)
                     .font(.footnote.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.92))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 9)
                     .background(.ultraThinMaterial, in: Capsule())
-                    .overlay(Capsule().stroke(.white.opacity(0.12)))
+                    .overlay(
+                        Capsule().stroke(
+                            LinearGradient(
+                                colors: [.white.opacity(0.32), .white.opacity(0.05)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.8
+                        )
+                    )
+                    .shadow(color: .black.opacity(0.28), radius: 16, y: 8)
                     .padding(.top, 8)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: model.toast)
+        .animation(.spring(response: 0.3, dampingFraction: 0.82), value: model.toast)
+        .tint(StudioTheme.accent)
     }
 }
 
@@ -66,8 +90,7 @@ struct EditorScreen: View {
                 .background(Color.black)
             } else {
                 VStack(spacing: 16) {
-                    ProgressView()
-                        .tint(.orange)
+                    ProgressView().tint(StudioTheme.accent)
                     Text("正在启动表盘编辑器…")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
