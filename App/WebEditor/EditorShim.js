@@ -155,6 +155,106 @@
   function cpSync(a, b) { postJSON('/cp', { from: String(a), to: String(b) }); }
   function renameSync(a, b) { postJSON('/rename', { from: String(a), to: String(b) }); }
 
+  // --- file descriptors ---------------------------------------------------
+  // The export pipeline opens a temp file, streams the archive into it and
+  // then renames it into place.  Descriptors are emulated with an append-only
+  // buffer so openSync/writeSync/closeSync behave like the Node originals.
+  var openFiles = {};
+  var nextFd = 1000;
+
+  function openSync(p, flags) {
+    var read = false;
+    var truncate = false;
+    var append = false;
+    if (typeof flags === 'string') {
+      if (flags.charAt(0) === 'r' && flags.indexOf('+') === -1) {
+        read = true;
+      } else {
+        if (flags.indexOf('w') !== -1) truncate = true;
+        if (flags.indexOf('a') !== -1) append = true;
+      }
+      if (flags.indexOf('+') !== -1) read = true;
+    } else if (typeof flags === 'number') {
+      // fs.constants: O_RDONLY=0, O_WRONLY=1, O_RDWR=2, O_CREAT=64, O_TRUNC=512, O_APPEND=1024
+      read = (flags & 3) !== 1;
+      truncate = (flags & 512) !== 0;
+      append = (flags & 1024) !== 0;
+    }
+    var existing = new Uint8Array(0);
+    if (read && existsSync(p)) {
+      try { existing = toBytes(readFileSync(p)); } catch (e) { existing = new Uint8Array(0); }
+    }
+    if (!truncate && !read && existsSync(p)) {
+      try { existing = toBytes(readFileSync(p)); } catch (e) { existing = new Uint8Array(0); }
+    }
+    if (truncate) existing = new Uint8Array(0);
+    var fd = nextFd++;
+    openFiles[fd] = { path: String(p), chunks: [existing], length: existing.length, append: append };
+    return fd;
+  }
+
+  function writeSync(fd, data, offset, encoding) {
+    var handle = openFiles[fd];
+    if (!handle) throw Object.assign(new Error('EBADF'), { code: 'EBADF' });
+    if (typeof offset === 'string') encoding = offset;
+    var bytes = toBytes(data, encoding);
+    handle.chunks.push(bytes);
+    handle.length += bytes.length;
+    handle.touched = true;
+    return bytes.length;
+  }
+
+  function readSync(fd, buffer, offset, length) {
+    var handle = openFiles[fd];
+    if (!handle) throw Object.assign(new Error('EBADF'), { code: 'EBADF' });
+    var all = flushHandle(handle);
+    var count = Math.min(length, all.length);
+    buffer.set(all.subarray(0, count), offset || 0);
+    return count;
+  }
+
+  function flushHandle(handle) {
+    var all = new Uint8Array(handle.length);
+    var at = 0;
+    handle.chunks.forEach(function (chunk) { all.set(chunk, at); at += chunk.length; });
+    handle.chunks = [all];
+    handle.length = all.length;
+    return all;
+  }
+
+  function closeSync(fd) {
+    var handle = openFiles[fd];
+    if (!handle) return;
+    delete openFiles[fd];
+    if (handle.length > 0 || handle.touched) {
+      writeFileSync(handle.path, flushHandle(handle));
+    }
+  }
+
+  function ftruncateSync(fd, len) {
+    var handle = openFiles[fd];
+    if (!handle) throw Object.assign(new Error('EBADF'), { code: 'EBADF' });
+    var all = flushHandle(handle);
+    var size = typeof len === 'number' ? len : 0;
+    var next = new Uint8Array(size);
+    next.set(all.subarray(0, Math.min(size, all.length)));
+    handle.chunks = [next];
+    handle.length = size;
+    return 0;
+  }
+
+  function fstatSync(fd) {
+    var handle = openFiles[fd];
+    if (!handle) throw Object.assign(new Error('EBADF'), { code: 'EBADF' });
+    var stat = {
+      size: handle.length,
+      type: 'file',
+      isFile: function () { return true; },
+      isDirectory: function () { return false; }
+    };
+    return stat;
+  }
+
   var fs = {
     promises: {
       readFile: function (p, o) { return Promise.resolve().then(function () { return readFileSync(p, o); }); },
@@ -184,7 +284,7 @@
     createWriteStream: function (p) {
       var chunks = [];
       return {
-        write: function (d) { chunks.push(toBytes(d)); },
+        write: function (d) { chunks.push(toBytes(d)); return true; },
         end: function (cb) {
           var length = chunks.reduce(function (sum, c) { return sum + c.length; }, 0);
           var all = new Uint8Array(length), offset = 0;
@@ -192,8 +292,61 @@
           writeFileSync(p, all);
           if (cb) cb();
         },
-        on: function () {}, once: function () {}
+        on: function () { return this; },
+        once: function () { return this; },
+        emit: function () { return false; }
       };
+    },
+    createReadStream: function (p) {
+      var listeners = {};
+      var stream = {
+        on: function (event, fn) {
+          (listeners[event] = listeners[event] || []).push(fn);
+          return stream;
+        },
+        once: function (event, fn) { return stream.on(event, fn); },
+        pipe: function () { return stream; },
+        destroy: function () {},
+        emit: function (event, value) {
+          (listeners[event] || []).forEach(function (fn) { fn(value); });
+          return true;
+        }
+      };
+      setTimeout(function () {
+        try {
+          stream.emit('data', readFileSync(p));
+          stream.emit('end');
+        } catch (e) {
+          stream.emit('error', e);
+        }
+      }, 0);
+      return stream;
+    },
+    openSync: openSync,
+    closeSync: closeSync,
+    writeSync: writeSync,
+    writevSync: function (fd, buffers) {
+      var total = 0;
+      (buffers || []).forEach(function (item) {
+        total += writeSync(fd, item && item.buffer ? item.buffer : item);
+      });
+      return total;
+    },
+    readSync: readSync,
+    ftruncateSync: ftruncateSync,
+    fstatSync: fstatSync,
+    truncateSync: function (p, len) {
+      var bytes = existsSync(p) ? toBytes(readFileSync(p)) : new Uint8Array(0);
+      var size = typeof len === 'number' ? len : 0;
+      var next = new Uint8Array(size);
+      next.set(bytes.subarray(0, Math.min(size, bytes.length)));
+      writeFileSync(p, next);
+    },
+    constants: {
+      O_RDONLY: 0, O_WRONLY: 1, O_RDWR: 2,
+      O_CREAT: 64, O_EXCL: 128, O_TRUNC: 512, O_APPEND: 1024,
+      F_OK: 0, R_OK: 4, W_OK: 2, X_OK: 1,
+      COPYFILE_EXCL: 1
     }
   };
 
