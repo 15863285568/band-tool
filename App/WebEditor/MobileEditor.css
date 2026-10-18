@@ -351,21 +351,34 @@ body.miface-mobile .ant-modal-content {
     max-height: calc(100vh - 16px) !important;
     display: flex;
     flex-direction: column;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+body.miface-mobile .ant-modal {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    margin: 0 auto !important;
+}
+
+body.miface-mobile .ant-modal-footer {
+    position: sticky !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0;
+    width: auto !important;
+    z-index: 5;
+    margin-top: 0 !important;
+    padding: 10px 0 2px !important;
+    background: linear-gradient(to top, rgba(26, 26, 34, 0.98) 70%, rgba(26, 26, 34, 0));
 }
 
 body.miface-mobile .ant-modal-body {
     flex: 1 1 auto;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
-}
-
-body.miface-mobile .ant-modal-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 5;
-    margin-top: 0 !important;
-    padding: 10px 0 2px !important;
-    background: linear-gradient(to top, rgba(26, 26, 34, 0.98) 70%, rgba(26, 26, 34, 0));
 }
 
 body.miface-mobile *::-webkit-scrollbar {

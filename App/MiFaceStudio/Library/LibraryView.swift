@@ -10,6 +10,7 @@ struct LibraryView: View {
     @State private var tab = 0
     @State private var showImporter = false
     @State private var selectedArtifact: FaceArtifact?
+    @State private var editingIDArtifact: FaceArtifact?
     @State private var pendingDeleteProject: FaceProject?
     @State private var pendingDeleteArtifact: FaceArtifact?
 
@@ -66,6 +67,9 @@ struct LibraryView: View {
             .sheet(item: $selectedArtifact) { artifact in
                 InstallSheet(artifact: artifact)
                     .environmentObject(model)
+            }
+            .sheet(item: $editingIDArtifact) { artifact in
+                FaceIDEditorSheet(artifact: artifact, library: library)
             }
             .alert("删除工程？", isPresented: Binding(
                 get: { pendingDeleteProject != nil },
@@ -136,6 +140,13 @@ struct LibraryView: View {
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
+                        if ["face", "bin", "mwz"].contains(artifact.url.pathExtension.lowercased()) {
+                            Button {
+                                editingIDArtifact = artifact
+                            } label: {
+                                Label("修改表盘 ID", systemImage: "number")
+                            }
+                        }
                         Button(role: .destructive) { pendingDeleteArtifact = artifact } label: {
                             Label("删除文件", systemImage: "trash")
                         }
