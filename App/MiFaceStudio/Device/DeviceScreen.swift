@@ -24,9 +24,7 @@ private struct DeviceContent: View {
             ScrollView {
                 VStack(spacing: 16) {
                     connectionCard
-                    if bluetooth.isConnected {
-                        authCard
-                    }
+                    authCard
                     installCard
                     helpCard
                 }
@@ -65,7 +63,8 @@ private struct DeviceContent: View {
             }
             .onChange(of: bluetooth.isConnected) { connected in
                 if connected {
-                    keyText = bluetooth.currentAuthKey()
+                    let stored = bluetooth.currentAuthKey()
+                    if !stored.isEmpty { keyText = stored }
                 }
             }
             .onChange(of: bluetooth.authReady) { ready in
@@ -163,13 +162,16 @@ private struct DeviceContent: View {
                 HStack(spacing: 8) {
                     Image(systemName: bluetooth.authReady ? "lock.open.fill" : "lock.fill")
                         .foregroundStyle(bluetooth.authReady ? .green : .orange)
-                    Text(bluetooth.authReady ? "认证已完成" : "需要 AuthKey 才能安装表盘")
+                    Text(bluetooth.authReady ? "认证已完成" : (bluetooth.isConnected ? "需要 AuthKey 才能安装表盘" : "先连接设备，再粘贴 AuthKey"))
                         .font(.subheadline.weight(.medium))
                     Spacer()
                 }
                 KeyInputView(text: $keyText) {
                     saveKey()
                 }
+                .disabled(!bluetooth.isConnected)
+                .opacity(bluetooth.isConnected ? 1 : 0.55)
+
                 HStack(spacing: 10) {
                     Button {
                         if let text = UIPasteboard.general.string {
@@ -185,8 +187,15 @@ private struct DeviceContent: View {
                         Label("重新认证", systemImage: "arrow.clockwise")
                     }
                     .buttonStyle(.bordered)
+                    .disabled(!bluetooth.isConnected)
                 }
                 .font(.footnote)
+
+                if !bluetooth.isConnected {
+                    Text("连接手表/手环后，这里的输入框会变为可编辑；粘贴 32 位密钥并点「保存」。")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }
