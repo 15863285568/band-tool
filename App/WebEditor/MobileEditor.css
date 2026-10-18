@@ -156,14 +156,33 @@ body.miface-mobile .mf-right [class*="overflow-y-auto"] {
 /* Workbench/canvas. */
 body.miface-mobile .mf-workbench-wrap,
 body.miface-mobile .mf-workbench-outer-wrap {
-    height: 48vh !important;
-    min-height: 330px;
-    max-height: 520px;
+    position: relative;
+    height: auto !important;
+    min-height: 300px;
+    max-height: 62vh;
     width: 100% !important;
+    aspect-ratio: var(--device-ratio, 336 / 480);
     flex: none !important;
     overflow: hidden !important;
     border-radius: 16px;
     background: rgba(0, 0, 0, 0.16);
+}
+
+body.miface-mobile .mf-workbench-wrap::after {
+    content: attr(data-device-label);
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 12;
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.72);
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(10, 10, 14, 0.58);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(10px);
+    pointer-events: none;
 }
 
 body.miface-mobile .mf-workbench {
@@ -265,6 +284,53 @@ body.miface-mobile .ant-drawer-content {
 body.miface-mobile .ant-dropdown,
 body.miface-mobile .ant-select-dropdown {
     max-width: calc(100vw - 24px) !important;
+    max-height: 58vh !important;
+    overflow-y: auto !important;
+}
+
+body.miface-mobile .ant-dropdown {
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    top: auto !important;
+    bottom: 8px !important;
+    width: auto !important;
+    transform: none !important;
+}
+
+body.miface-mobile .ant-popover {
+    max-width: calc(100vw - 20px) !important;
+}
+
+body.miface-mobile .ant-modal-wrap {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.miface-mobile .ant-modal {
+    top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+body.miface-mobile .ant-modal-content {
+    max-height: calc(100vh - 16px) !important;
+    display: flex;
+    flex-direction: column;
+}
+
+body.miface-mobile .ant-modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.miface-mobile .ant-modal-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin-top: 0 !important;
+    padding: 10px 0 2px !important;
+    background: linear-gradient(to top, rgba(26, 26, 34, 0.98) 70%, rgba(26, 26, 34, 0));
 }
 
 body.miface-mobile *::-webkit-scrollbar {

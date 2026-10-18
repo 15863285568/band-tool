@@ -40,8 +40,22 @@
   }
   function getText(path, params) { return request('GET', path, params).responseText; }
   function getBytes(path, params) {
-    var xhr = request('GET', path, params, null, 'arraybuffer');
-    return xhr.response ? new Uint8Array(xhr.response) : new Uint8Array(0);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', BASE + path + (params ? '?' + encodeQuery(params) : ''), false);
+    xhr.setRequestHeader('X-MiFace-Token', TOKEN);
+    // Synchronous XHR forbids responseType=arraybuffer; x-user-defined maps
+    // every byte to one UTF-16 code unit so we can recover binary data.
+    xhr.overrideMimeType('text/plain; charset=x-user-defined');
+    xhr.send(null);
+    if (xhr.status < 200 || xhr.status >= 300) {
+      var error = new Error('MiFace fs ' + path + ': ' + xhr.status);
+      error.code = xhr.status === 404 ? 'ENOENT' : 'EIO';
+      throw error;
+    }
+    var text = xhr.responseText || '';
+    var bytes = new Uint8Array(text.length);
+    for (var i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i) & 0xFF;
+    return bytes;
   }
   function postJSON(path, object) {
     var xhr = request('POST', path, null, JSON.stringify(object || {}));
@@ -209,9 +223,7 @@
         });
       }
       if (channel === 'pick_file') {
-        var extensions = (payload && payload.extensions || []).join(',');
-        var multiple = payload && payload.multi ? '1' : '0';
-        return Promise.resolve(JSON.parse(getText('/pick', { multiple: multiple, extensions: extensions })));
+        return pickWithFileInput(payload || {});
       }
       if (channel === 'close' || channel === 'exit' || channel === 'reload' ||
           channel === 'minimize' || channel === 'open_devtools' || channel === 'exec_adb_file') {
@@ -221,6 +233,66 @@
     },
     send: function () {}, on: function () {}, once: function () {}, removeListener: function () {}
   };
+
+  function pickWithFileInput(payload) {
+    if (payload.mode === 'dir') return Promise.resolve([]);
+    return new Promise(function (resolve) {
+      var extensions = payload.extensions || [];
+      var accept = extensions.length
+        ? extensions.map(function (e) { return '.' + String(e).replace(/^\./, ''); }).join(',')
+        : 'image/*';
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = accept;
+      input.multiple = !!payload.multi;
+      input.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;z-index:-1;';
+      document.body.appendChild(input);
+
+      var settled = false;
+      function finish(paths) {
+        if (settled) return;
+        settled = true;
+        try { input.remove(); } catch (e) {}
+        resolve(paths);
+      }
+
+      input.addEventListener('change', function () {
+        var files = Array.prototype.slice.call(input.files || []);
+        if (!files.length) { finish([]); return; }
+        var pending = files.length;
+        var paths = new Array(files.length);
+        files.forEach(function (file, index) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            var bytes = new Uint8Array(reader.result);
+            var safe = (file.name || 'image.png').replace(/[\\/:*?"<>|]/g, '_');
+            var path = '/workspace/Imports/' + Date.now() + '-' + index + '-' + safe;
+            try {
+              writeFileSync(path, bytes);
+              paths[index] = path;
+            } catch (e) {
+              console.error('pick_file write failed', e);
+            }
+            pending -= 1;
+            if (pending === 0) finish(paths.filter(Boolean));
+          };
+          reader.onerror = function () {
+            pending -= 1;
+            if (pending === 0) finish(paths.filter(Boolean));
+          };
+          reader.readAsArrayBuffer(file);
+        });
+      });
+
+      window.addEventListener('focus', function () {
+        window.setTimeout(function () {
+          if (!settled && (!input.files || input.files.length === 0)) finish([]);
+        }, 900);
+      }, { once: true });
+
+      input.click();
+    });
+  }
 
   var shell = {
     openExternal: function (url) {

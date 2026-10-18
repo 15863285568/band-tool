@@ -95,6 +95,8 @@
         }
         add(nav, 'mf-toolbar-nav');
       }
+
+      applyDeviceFrame();
     } else {
       var left = root.querySelector('[class~="flex-[15]"]');
       var right = root.querySelector('[class~="flex-[85]"]');
@@ -103,6 +105,29 @@
       var page = (left && left.parentElement) || root.firstElementChild;
       add(page, 'mf-home-page');
     }
+  }
+
+  function applyDeviceFrame() {
+    var match = (location.hash || '').match(/[?&]path=([^&]+)/);
+    if (!match || !window.electron || !window.electron.fs) return;
+    var project = decodeURIComponent(match[1]);
+    var xml = '';
+    try {
+      xml = window.electron.fs.readFileSync(project + '/description.xml', 'utf8');
+    } catch (e) {
+      return;
+    }
+    var sizeMatch = xml.match(/<size>([^<]+)<\/size>/);
+    var shapeMatch = xml.match(/<shape>([^<]+)<\/shape>/);
+    if (!sizeMatch) return;
+    var dimensions = sizeMatch[1].trim().split('x').map(Number);
+    if (dimensions.length !== 2 || !dimensions[0] || !dimensions[1]) return;
+    var shape = (shapeMatch && shapeMatch[1] || 'square').trim();
+    var wrap = document.querySelector('.mf-workbench-wrap');
+    if (!wrap) return;
+    wrap.style.setProperty('--device-ratio', dimensions[0] + ' / ' + dimensions[1]);
+    wrap.setAttribute('data-device-label', dimensions[0] + ' × ' + dimensions[1] + ' · ' + shape);
+    wrap.setAttribute('data-device-shape', shape);
   }
 
   function schedule() {
