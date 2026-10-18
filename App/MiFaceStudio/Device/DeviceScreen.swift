@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import Combine
 
 struct DeviceScreen: View {
     @EnvironmentObject private var model: AppModel
