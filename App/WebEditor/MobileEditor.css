@@ -185,6 +185,14 @@ body.miface-mobile .mf-workbench-wrap::after {
     pointer-events: none;
 }
 
+body.miface-mobile .mf-workbench-wrap[data-device-shape="circle"] {
+    border-radius: 50% !important;
+}
+
+body.miface-mobile .mf-workbench-wrap[data-device-shape="run"] {
+    border-radius: 34% / 17% !important;
+}
+
 body.miface-mobile .mf-workbench {
     width: 100% !important;
     height: 100% !important;
