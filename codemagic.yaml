@@ -1,18 +1,13 @@
 workflows:
-  ios-testflight:
-    name: iOS TestFlight / Ad Hoc
+  ios-unsigned:
+    name: iOS unsigned IPA
     instance_type: mac_mini_m2
-    max_build_duration: 90
+    max_build_duration: 60
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.miface.studio
       vars:
         XCODE_PROJECT: MiFaceStudio.xcodeproj
         XCODE_SCHEME: MiFaceStudio
-        BUNDLE_ID: com.miface.studio
       xcode: latest
-      cocoapods: default
     triggering:
       events:
         - push
@@ -44,28 +39,40 @@ workflows:
           xcodebuild -resolvePackageDependencies \
             -project "$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME"
-      - name: Build and archive
+      - name: Build unsigned app
         script: |
           cd App
           xcodebuild \
             -project "$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
+            -sdk iphoneos \
             -destination 'generic/platform=iOS' \
-            -archivePath "$CM_BUILD_DIR/MiFaceStudio.xcarchive" \
-            -allowProvisioningUpdates \
-            CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            archive
-      - name: Export IPA
+            -derivedDataPath "$CM_BUILD_DIR/DerivedData" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            build
+      - name: Package unsigned IPA
         script: |
-          cd App
-          xcodebuild -exportArchive \
-            -archivePath "$CM_BUILD_DIR/MiFaceStudio.xcarchive" \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath "$CM_BUILD_DIR/ipa" \
-            -allowProvisioningUpdates
+          APP="$CM_BUILD_DIR/DerivedData/Build/Products/Release-iphoneos/MiFaceStudio.app"
+          if [ ! -d "$APP" ]; then
+            echo "App bundle not found: $APP"
+            find "$CM_BUILD_DIR/DerivedData/Build/Products" -maxdepth 2 -type d -name '*.app'
+            exit 1
+          fi
+          rm -rf "$CM_BUILD_DIR/unsigned"
+          mkdir -p "$CM_BUILD_DIR/unsigned/Payload"
+          cp -R "$APP" "$CM_BUILD_DIR/unsigned/Payload/"
+          cd "$CM_BUILD_DIR/unsigned"
+          zip -qry "$CM_BUILD_DIR/MiFaceStudio-unsigned.ipa" Payload
+          ls -lh "$CM_BUILD_DIR/MiFaceStudio-unsigned.ipa"
+      - name: Verify package
+        script: |
+          unzip -l "$CM_BUILD_DIR/MiFaceStudio-unsigned.ipa" | head -20
+          echo "Unsigned IPA is ready: $CM_BUILD_DIR/MiFaceStudio-unsigned.ipa"
     artifacts:
-      - $CM_BUILD_DIR/ipa/*.ipa
-      - $CM_BUILD_DIR/MiFaceStudio.xcarchive
+      - $CM_BUILD_DIR/MiFaceStudio-unsigned.ipa
       - /tmp/xcodebuild_logs/*.log

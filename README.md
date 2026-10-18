@@ -16,7 +16,6 @@
 MiFaceStudio/
 ├─ App/                         # Xcode 工程（Codemagic 在这里构建）
 │  ├─ project.yml               # XcodeGen 工程描述
-│  ├─ ExportOptions.plist
 │  ├─ WebEditor/                # 打包的小米表盘编辑器 Web 资源
 │  └─ MiFaceStudio/
 │     ├─ App/                   # SwiftUI 入口
@@ -32,19 +31,30 @@ MiFaceStudio/
 └─ codemagic.yaml               # Codemagic 工作流（仓库根目录）
 ```
 
-## 在 Codemagic 上构建
+## 在 Codemagic 上构建（未签名 IPA）
+
+这个仓库的 `codemagic.yaml` 只做 **未签名 IPA**，不需要 Apple Developer 账号、证书或描述文件。
 
 1. 把 **整个 `MiFaceStudio` 文件夹**推到 GitHub/GitLab（`codemagic.yaml` 必须在仓库根目录）。
-2. 在 Codemagic 里添加这个 App，连接你的 Apple Developer 账号，创建证书和描述文件。
-3. 在 Codemagic 的环境变量里确认：
-   - `APPLE_TEAM_ID`：你的 10 位 Team ID（Codemagic 签名配置通常会自动注入）。
-   - Bundle ID 改为你自己的，例如 `com.yourname.miface`（同时改 `App/project.yml` 和 `codemagic.yaml` 里的 `BUNDLE_ID`）。
-4. 直接运行 `ios-testflight` 工作流。它会：
+2. 在 Codemagic 里添加这个仓库，选择 `ios-unsigned` 工作流。
+3. 直接运行。它会：
    - `brew install xcodegen`
    - 在 `App/` 里生成 `MiFaceStudio.xcodeproj`
    - 解析 ZIPFoundation
-   - archive + export IPA
-5. 构建产物在 `$CM_BUILD_DIR/ipa/`，可以下载安装或上传 TestFlight。
+   - 用 `CODE_SIGNING_ALLOWED=NO` 编译 Release `.app`
+   - 打包成 `Payload/MiFaceStudio.app` 的未签名 IPA
+4. 构建产物在 `$CM_BUILD_DIR/MiFaceStudio-unsigned.ipa`，在 Codemagic 的 Artifacts 里下载。
+
+### 未签名 IPA 怎么装
+
+未签名 IPA **不能直接双击安装**。你需要用以下任一方式自签/侧载：
+
+- **TrollStore**（仅支持对应系统和设备）
+- **Sideloadly / AltStore / SideStore**：用你自己的 Apple ID 或开发者证书重签
+- **Xcode**：用 `ios-deploy` 或 Xcode Devices 安装（需要签名）
+- 企业签名/个人签名工具
+
+App 本身包含 `get-task-allow` 之外没有特殊 entitlement，重签时保持 Bundle ID 一致即可。
 
 ### 本机 Xcode
 
@@ -57,7 +67,7 @@ xcodegen generate
 open MiFaceStudio.xcodeproj
 ```
 
-签名后选择真机运行。**必须用真机**，模拟器没有 CoreBluetooth。
+如果需要真机直接运行，仍然需要你自己配置签名。**必须用真机**，模拟器没有 CoreBluetooth。
 
 ## 使用流程
 
@@ -86,8 +96,8 @@ AuthKey 是小米运动健康绑定设备时生成的 32 位十六进制密钥�
 - **I8 索引色**：编码器会回退为 ARGB8888（文件更大但可显示）。普通表盘通常走 true-color 路径。
 - **必须在前台安装**：iOS 不允许普通 App 在后台维持长时间 BLE 传输；安装时请保持屏幕亮起、App 在前台。
 - **不同固件差异**：第三方安装能力取决于设备/固件；部分型号可能拒绝未签名表盘。安装失败不会影响官方表盘。
-- **编辑器资源版权**：`Resources/WebEditor` 来自小米官方 Web 版，仅用于个人互操作/学习；不要把它用于商业分发或上架。详见 `NOTICE.md`。
-- **App Store**：本项目包含 AGPL 协议实现和第三方编辑器资源，**不建议直接上架 App Store**；建议自签、Ad Hoc 或内部 TestFlight。
+- **编辑器资源版权**：`App/WebEditor` 来自小米官方 Web 版，仅用于个人互操作/学习；不要把它用于商业分发或上架。详见 `NOTICE.md`。
+- **App Store**：本项目包含 AGPL 协议实现和第三方编辑器资源，**不建议直接上架 App Store**；建议自签、Ad Hoc 或 TrollStore。
 
 ## 技术要点
 
