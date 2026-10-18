@@ -233,7 +233,7 @@ final class XiaomiSession: SarTransport {
         authContinuation = nil
     }
 
-    private func failAuth(_ error: Error) {
+    private func failAuth(_ error: XiaomiSessionError) {
         authToken = UUID()
         authContinuation?.resume(throwing: error)
         authContinuation = nil

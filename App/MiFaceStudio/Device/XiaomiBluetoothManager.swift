@@ -299,6 +299,10 @@ extension XiaomiBluetoothManager: CBPeripheralDelegate {
 }
 
 extension XiaomiBluetoothManager: SarTransport {
+    func sendFrames(_ frames: [Data]) {
+        send(frames: frames)
+    }
+
     func send(frames: [Data]) {
         let maxLength = max(20, selected?.maximumWriteValueLength(for: .withoutResponse) ?? 182)
         for frame in frames {

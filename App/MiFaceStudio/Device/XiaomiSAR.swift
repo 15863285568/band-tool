@@ -274,7 +274,7 @@ final class SarController {
     private func startTimer() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
-            self?.tick()
+            Task { @MainActor in self?.tick() }
         }
         RunLoop.main.add(timer!, forMode: .common)
     }

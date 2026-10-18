@@ -58,7 +58,7 @@ enum AppPaths {
             }
         }
         if path.hasPrefix("/") {
-            return workspace.appendingPathComponent(path.dropFirst())
+            return workspace.appendingPathComponent(String(path.dropFirst()))
         }
         return workspace.appendingPathComponent(path)
     }
